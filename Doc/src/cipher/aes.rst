@@ -17,6 +17,7 @@ As an example, encryption can be done as follows::
     >>>
     >>> nonce = cipher.nonce
     >>> ciphertext, tag = cipher.encrypt_and_digest(data)
+    undefined variable data 
 
 The recipient can obtain the original message using the same key
 and the incoming triple ``(nonce, ciphertext, tag)``::
