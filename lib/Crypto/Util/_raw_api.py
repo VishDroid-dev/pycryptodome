@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ===================================================================
 
+import os
 import abc
 import sys
 from Crypto.Util.py3compat import byte_string
@@ -75,6 +76,12 @@ try:
     if '__pypy__' not in sys.builtin_module_names and sys.flags.optimize == 2:
         raise ImportError("CFFI with optimize=2 fails due to pycparser bug.")
 
+    # cffi still uses PyUnicode_GetSize, which was removed in Python 3.12
+    # thus leading to a crash on cffi.dlopen()
+    # See https://groups.google.com/u/1/g/python-cffi/c/oZkOIZ_zi5k
+    if sys.version_info >= (3, 12) and os.name == "nt":
+        raise ImportError("CFFI is not compatible with Python 3.12 on Windows")
+
     from cffi import FFI
 
     ffi = FFI()
@@ -92,7 +99,7 @@ try:
         @cdecl, the C function declarations.
         """
 
-        if hasattr(ffi, "RTLD_DEEPBIND"):
+        if hasattr(ffi, "RTLD_DEEPBIND") and not os.getenv('PYCRYPTODOME_DISABLE_DEEPBIND'):
             lib = ffi.dlopen(name, ffi.RTLD_DEEPBIND)
         else:
             lib = ffi.dlopen(name)
@@ -298,10 +305,13 @@ def load_pycryptodome_raw_lib(name, cdecl):
     for ext in extension_suffixes:
         try:
             filename = basename + ext
-            return load_lib(pycryptodome_filename(dir_comps, filename),
-                            cdecl)
+            full_name = pycryptodome_filename(dir_comps, filename)
+            if not os.path.isfile(full_name):
+                attempts.append("Not found '%s'" % filename)
+                continue
+            return load_lib(full_name, cdecl)
         except OSError as exp:
-            attempts.append("Trying '%s': %s" % (filename, str(exp)))
+            attempts.append("Cannot load '%s': %s" % (filename, str(exp)))
     raise OSError("Cannot load native module '%s': %s" % (name, ", ".join(attempts)))
 
 

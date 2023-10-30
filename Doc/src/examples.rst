@@ -14,6 +14,8 @@ encryption modes`_ like `GCM`_, `CCM`_ or `SIV`_).
     from Crypto.Cipher import AES
     from Crypto.Random import get_random_bytes
 
+    data = b'secret data'
+
     key = get_random_bytes(16)
     cipher = AES.new(key, AES.MODE_EAX)
     ciphertext, tag = cipher.encrypt_and_digest(data)
@@ -31,6 +33,7 @@ Note that the code generates a ``ValueError`` exception when tampering is detect
 
     file_in = open("encrypted.bin", "rb")
     nonce, tag, ciphertext = [ file_in.read(x) for x in (16, 16, -1) ]
+    file_in.close()
     
     # let's assume that the key is somehow available again
     cipher = AES.new(key, AES.MODE_EAX, nonce)
@@ -139,6 +142,7 @@ first, and with that the rest of the file:
 
     enc_session_key, nonce, tag, ciphertext = \
        [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
+    file_in.close()
 
     # Decrypt the session key with the private RSA key
     cipher_rsa = PKCS1_OAEP.new(private_key)

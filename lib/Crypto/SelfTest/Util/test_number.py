@@ -84,6 +84,24 @@ class MiscTests(unittest.TestCase):
         self.assertEqual(2, number.ceil_div(8, 4))
         self.assertEqual(3, number.ceil_div(9, 4))
 
+    def test_getPrime(self):
+        """Util.number.getPrime"""
+        self.assertRaises(ValueError, number.getPrime, -100)
+        self.assertRaises(ValueError, number.getPrime, 0)
+        self.assertRaises(ValueError, number.getPrime, 1)
+
+        bits = 4
+        for i in range(100):
+            x = number.getPrime(bits)
+            self.assertEqual(x >= (1 << bits - 1), 1)
+            self.assertEqual(x < (1 << bits), 1)
+
+        bits = 512
+        x = number.getPrime(bits)
+        self.assertNotEqual(x % 2, 0)
+        self.assertEqual(x >= (1 << bits - 1), 1)
+        self.assertEqual(x < (1 << bits), 1)
+
     def test_getStrongPrime(self):
         """Util.number.getStrongPrime"""
         self.assertRaises(ValueError, number.getStrongPrime, 256)
@@ -149,6 +167,8 @@ class LongTests(unittest.TestCase):
         self.assertEqual(long_to_bytes(0, 1), b'\x00')
         self.assertEqual(long_to_bytes(0, 2), b'\x00\x00')
         self.assertEqual(long_to_bytes(1, 3), b'\x00\x00\x01')
+        self.assertEqual(long_to_bytes(65535, 2), b'\xFF\xFF')
+        self.assertEqual(long_to_bytes(65536, 2), b'\x00\x01\x00\x00')
         self.assertEqual(long_to_bytes(0x100, 1), b'\x01\x00')
         self.assertEqual(long_to_bytes(0xFF00000001, 6), b'\x00\xFF\x00\x00\x00\x01')
         self.assertEqual(long_to_bytes(0xFF00000001, 8), b'\x00\x00\x00\xFF\x00\x00\x00\x01')
